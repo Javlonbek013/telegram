@@ -52,6 +52,8 @@ app.get('/messages', (req, res) => {
   res.json(result);
 });
 
-app.listen(3000, () => {
-  console.log('✅ Server 3000-portda ishlamoqda');
+// ❗ PORT muhim o‘zgarish
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server ${PORT}-portda ishlamoqda`);
 });
