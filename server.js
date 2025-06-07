@@ -2,15 +2,22 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
+
+// CORS sozlamalari (frontend boshqa domen yoki portda bo'lsa kerak bo'ladi)
 app.use(cors());
+
+// JSON formatdagi so'rovlarni qabul qilish uchun
 app.use(express.json());
 
 const users = [];
 const messages = [];
 
+// Ro'yxatdan o'tish
 app.post('/register', (req, res) => {
   const { phone, password } = req.body;
-  if (!phone || !password) return res.status(400).json({ error: 'Telefon va parol kerak' });
+  if (!phone || !password) {
+    return res.status(400).json({ error: 'Telefon va parol kerak' });
+  }
 
   const user = users.find(u => u.phone === phone);
   if (user) {
@@ -25,34 +32,47 @@ app.post('/register', (req, res) => {
   res.json({ message: 'Ro‘yxatdan muvaffaqiyatli o‘tildi' });
 });
 
+// Kirish
 app.post('/login', (req, res) => {
   const { phone, password } = req.body;
   const user = users.find(u => u.phone === phone && u.password === password);
-  if (!user) return res.status(400).json({ error: 'Telefon yoki parol noto‘g‘ri' });
+  if (!user) {
+    return res.status(400).json({ error: 'Telefon yoki parol noto‘g‘ri' });
+  }
   res.json({ message: 'Kirish muvaffaqiyatli' });
 });
 
+// Xabar yuborish
 app.post('/send-message', (req, res) => {
   const { from, to, text } = req.body;
-  if (!from || !to || !text) return res.status(400).json({ error: 'Ma’lumotlar yetarli emas' });
+  if (!from || !to || !text) {
+    return res.status(400).json({ error: 'Ma’lumotlar yetarli emas' });
+  }
 
   const sender = users.find(u => u.phone === from);
   const receiver = users.find(u => u.phone === to);
-  if (!sender || !receiver) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+  if (!sender || !receiver) {
+    return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+  }
 
   messages.push({ from, to, text, time: new Date() });
   res.json({ message: 'Xabar yuborildi' });
 });
 
+// Xabarlarni olish (chat tarixi)
 app.get('/messages', (req, res) => {
   const { user1, user2 } = req.query;
+  if (!user1 || !user2) {
+    return res.status(400).json({ error: 'Ikkala foydalanuvchi kerak' });
+  }
+  
   const result = messages.filter(
     msg => (msg.from === user1 && msg.to === user2) || (msg.from === user2 && msg.to === user1)
   );
   res.json(result);
 });
 
-// ❗ PORT muhim o‘zgarish
+// PORT ni env dan oling yoki 3000 portda ishga tushiring
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server ${PORT}-portda ishlamoqda`);
