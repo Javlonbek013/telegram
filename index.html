@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat App</title>
+</head>
+<body>
+  <div id="register-section">
+    <h3>Ro‘yxatdan o‘tish</h3>
+    <input type="text" id="reg-phone" placeholder="Telefon raqam" />
+    <input type="password" id="reg-pass" placeholder="Parol" />
+    <button onclick="register()">Ro‘yxatdan o‘tish</button>
+  </div>
+
+  <div id="login-section">
+    <h3>Kirish</h3>
+    <input type="text" id="login-phone" placeholder="Telefon raqam" />
+    <input type="password" id="login-pass" placeholder="Parol" />
+    <button onclick="login()">Kirish</button>
+  </div>
+
+  <div id="chat-section" style="display:none;">
+    <h3>Chat</h3>
+    <input type="text" id="chat-to" placeholder="Kimga yozayapsiz (telefon raqam)" oninput="loadMessages()" />
+    <div id="chat-messages" style="height:300px; overflow-y:auto; border:1px solid #ccc; margin:10px 0;"></div>
+    <input type="text" id="chat-text" placeholder="Xabar matni" />
+    <button onclick="sendMessage()">Yuborish</button>
+  </div>
+
+  <script src="client.js"></script>
+</body>
+</html>
