@@ -49,7 +49,7 @@
       const phone = document.getElementById('reg-phone').value.trim();
       const password = document.getElementById('reg-pass').value.trim();
 
-      fetch('http://localhost:3000/register', {
+      fetch('https://telegram-backend.up.railway.app/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, password })
