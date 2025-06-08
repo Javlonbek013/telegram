@@ -74,6 +74,6 @@ app.get('/messages', (req, res) => {
 
 // PORT ni env dan oling yoki 3000 portda ishga tushiring
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Server ${PORT}-portda ishlamoqda`);
+app.listen(process.env.PORT || 3000, () => {
+  console.log('✅ Server ishga tushdi');
 });

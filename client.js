@@ -1,10 +1,11 @@
 let currentUser = null;
+const backendURL = "https://telegram-8yhr.onrender.com"; // 🔁 Render server URL
 
 function register() {
   const phone = document.getElementById('reg-phone').value.trim();
   const password = document.getElementById('reg-pass').value.trim();
 
-  fetch('http://localhost:3000/register', {
+  fetch(`${backendURL}/register`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ phone, password })
@@ -25,7 +26,7 @@ function login() {
   const phone = document.getElementById('login-phone').value.trim();
   const password = document.getElementById('login-pass').value.trim();
 
-  fetch('http://localhost:3000/login', {
+  fetch(`${backendURL}/login`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ phone, password })
@@ -45,7 +46,7 @@ function loadMessages() {
   const otherPhone = document.getElementById('chat-to').value.trim();
   if (!currentUser || !otherPhone) return;
 
-  fetch(`http://localhost:3000/messages?user1=${currentUser}&user2=${otherPhone}`)
+  fetch(`${backendURL}/messages?user1=${currentUser}&user2=${otherPhone}`)
   .then(res => res.json())
   .then(data => {
     const chatMessages = document.getElementById('chat-messages');
@@ -64,7 +65,7 @@ function sendMessage() {
   const text = document.getElementById('chat-text').value.trim();
   if (!to || !text) return alert('Kimga va matnni kiriting');
 
-  fetch('http://localhost:3000/send-message', {
+  fetch(`${backendURL}/send-message`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ from: currentUser, to, text })
