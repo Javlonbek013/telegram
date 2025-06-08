@@ -1,79 +1,27 @@
 const express = require('express');
-const cors = require('cors');
-
+const path = require('path');
 const app = express();
 
-// CORS sozlamalari (frontend boshqa domen yoki portda bo'lsa kerak bo'ladi)
-app.use(cors());
-
-// JSON formatdagi so'rovlarni qabul qilish uchun
 app.use(express.json());
 
-const users = [];
-const messages = [];
+// public papkasi frontend fayllaringiz joylashgan joy bo‘lsin
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Ro'yxatdan o'tish
+// API endpointlar misol uchun
 app.post('/register', (req, res) => {
-  const { phone, password } = req.body;
-  if (!phone || !password) {
-    return res.status(400).json({ error: 'Telefon va parol kerak' });
-  }
-
-  const user = users.find(u => u.phone === phone);
-  if (user) {
-    if (user.password === password) {
-      return res.json({ message: 'Tizimga kirdingiz (oldin ro‘yxatdan o‘tgan)' });
-    } else {
-      return res.status(400).json({ error: 'Bu raqam oldin ro‘yxatdan o‘tgan. Parol xato.' });
-    }
-  }
-
-  users.push({ phone, password });
-  res.json({ message: 'Ro‘yxatdan muvaffaqiyatli o‘tildi' });
+  // ro'yxatdan o'tish kodi
 });
 
-// Kirish
 app.post('/login', (req, res) => {
-  const { phone, password } = req.body;
-  const user = users.find(u => u.phone === phone && u.password === password);
-  if (!user) {
-    return res.status(400).json({ error: 'Telefon yoki parol noto‘g‘ri' });
-  }
-  res.json({ message: 'Kirish muvaffaqiyatli' });
+  // login kodi
 });
 
-// Xabar yuborish
-app.post('/send-message', (req, res) => {
-  const { from, to, text } = req.body;
-  if (!from || !to || !text) {
-    return res.status(400).json({ error: 'Ma’lumotlar yetarli emas' });
-  }
+// boshqa endpointlar...
 
-  const sender = users.find(u => u.phone === from);
-  const receiver = users.find(u => u.phone === to);
-  if (!sender || !receiver) {
-    return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
-  }
-
-  messages.push({ from, to, text, time: new Date() });
-  res.json({ message: 'Xabar yuborildi' });
+// Boshqa barcha so'rovlarni frontend index.html ga yo'naltirish
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Xabarlarni olish (chat tarixi)
-app.get('/messages', (req, res) => {
-  const { user1, user2 } = req.query;
-  if (!user1 || !user2) {
-    return res.status(400).json({ error: 'Ikkala foydalanuvchi kerak' });
-  }
-  
-  const result = messages.filter(
-    msg => (msg.from === user1 && msg.to === user2) || (msg.from === user2 && msg.to === user1)
-  );
-  res.json(result);
-});
-
-// PORT ni env dan oling yoki 3000 portda ishga tushiring
 const PORT = process.env.PORT || 3000;
-app.listen(process.env.PORT || 3000, () => {
-  console.log('✅ Server ishga tushdi');
-});
+app.listen(PORT, () => console.log(`Server ${PORT}-portda ishlayapti`));
