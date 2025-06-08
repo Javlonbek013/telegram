@@ -3,66 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chat App</title>
+  <title>Telegram Clone</title>
   <style>
-    #chat-messages {
-      height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      margin-bottom: 10px;
-      padding: 5px;
-      background: #f9f9f9;
-      font-family: Arial, sans-serif;
-    }
-    #chat-messages div {
-      margin-bottom: 8px;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #chat-section { display: none; }
+    #chat-messages { border: 1px solid #ccc; height: 200px; overflow-y: auto; margin-bottom: 10px; padding: 5px; }
   </style>
 </head>
 <body>
+  <h2>Ro‘yxatdan o‘tish</h2>
   <div id="register-section">
-    <h3>Ro‘yxatdan o‘tish</h3>
-    <input type="text" id="reg-phone" placeholder="Telefon raqam" />
-    <input type="password" id="reg-pass" placeholder="Parol" />
+    <input id="reg-phone" placeholder="Telefon raqamingiz" /><br />
+    <input id="reg-pass" type="password" placeholder="Parol" /><br />
     <button onclick="register()">Ro‘yxatdan o‘tish</button>
   </div>
 
+  <h2>Kirish</h2>
   <div id="login-section">
-    <h3>Kirish</h3>
-    <input type="text" id="login-phone" placeholder="Telefon raqam" />
-    <input type="password" id="login-pass" placeholder="Parol" />
+    <input id="login-phone" placeholder="Telefon raqamingiz" /><br />
+    <input id="login-pass" type="password" placeholder="Parol" /><br />
     <button onclick="login()">Kirish</button>
   </div>
 
-  <div id="chat-section" style="display:none;">
-    <h3>Chat</h3>
+  <div id="chat-section">
+    <h2>Chat</h2>
+    <input id="chat-to" placeholder="Kimga yozmoqchisiz?" /><br />
     <div id="chat-messages"></div>
-    <input type="text" id="chat-to" placeholder="Kimga yozayapsiz (telefon raqam)" />
-    <input type="text" id="chat-text" placeholder="Xabar matni" />
+    <input id="chat-text" placeholder="Xabaringizni yozing" />
     <button onclick="sendMessage()">Yuborish</button>
   </div>
 
   <script>
     let currentUser = null;
+    const API_URL = 'https://telegramj.onrender.com'; // bu yerga o'zingizning Render URL ni qo'ying!
 
     function register() {
       const phone = document.getElementById('reg-phone').value.trim();
       const password = document.getElementById('reg-pass').value.trim();
 
-      fetch('https://telegram-backend.up.railway.app/register', {
+      fetch(API_URL + '/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, password })
       })
       .then(res => res.json())
       .then(data => {
-        if (data.error) alert(data.error);
-        else {
-          alert(data.message);
-          currentUser = phone;
-          showChat();
-          loadMessages();
-        }
+        if (data.error) return alert(data.error);
+        alert(data.message);
+        currentUser = phone;
+        toggleSections();
+        loadMessages();
       })
       .catch(() => alert('Server bilan bog‘lanishda xatolik yuz berdi'));
     }
@@ -71,25 +61,23 @@
       const phone = document.getElementById('login-phone').value.trim();
       const password = document.getElementById('login-pass').value.trim();
 
-      fetch('http://localhost:3000/login', {
+      fetch(API_URL + '/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, password })
       })
       .then(res => res.json())
       .then(data => {
-        if (data.error) alert(data.error);
-        else {
-          alert(data.message);
-          currentUser = phone;
-          showChat();
-          loadMessages();
-        }
+        if (data.error) return alert(data.error);
+        alert(data.message);
+        currentUser = phone;
+        toggleSections();
+        loadMessages();
       })
       .catch(() => alert('Server bilan bog‘lanishda xatolik yuz berdi'));
     }
 
-    function showChat() {
+    function toggleSections() {
       document.getElementById('register-section').style.display = 'none';
       document.getElementById('login-section').style.display = 'none';
       document.getElementById('chat-section').style.display = 'block';
@@ -99,19 +87,19 @@
       const otherPhone = document.getElementById('chat-to').value.trim();
       if (!currentUser || !otherPhone) return;
 
-      fetch(`http://localhost:3000/messages?user1=${currentUser}&user2=${otherPhone}`)
+      fetch(`${API_URL}/messages?user1=${currentUser}&user2=${otherPhone}`)
       .then(res => res.json())
       .then(data => {
         const chatMessages = document.getElementById('chat-messages');
         chatMessages.innerHTML = '';
         data.forEach(msg => {
           const div = document.createElement('div');
-          div.textContent = `${msg.from}: ${msg.text} (${new Date(msg.time).toLocaleString()})`;
+          div.textContent = `${msg.from}: ${msg.text} (${new Date(msg.time).toLocaleTimeString()})`;
           chatMessages.appendChild(div);
         });
         chatMessages.scrollTop = chatMessages.scrollHeight;
       })
-      .catch(() => console.log('Xabarlarni yuklashda xatolik'));
+      .catch(() => alert('Server bilan bog‘lanishda xatolik yuz berdi'));
     }
 
     function sendMessage() {
@@ -119,26 +107,24 @@
       const text = document.getElementById('chat-text').value.trim();
       if (!to || !text) return alert('Kimga va matnni kiriting');
 
-      fetch('http://localhost:3000/send-message', {
+      fetch(API_URL + '/send-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ from: currentUser, to, text })
       })
       .then(res => res.json())
       .then(data => {
-        if (data.error) alert(data.error);
-        else {
-          document.getElementById('chat-text').value = '';
-          loadMessages();
-        }
+        if (data.error) return alert(data.error);
+        document.getElementById('chat-text').value = '';
+        loadMessages();
       })
-      .catch(() => alert('Xabar yuborishda xatolik yuz berdi'));
+      .catch(() => alert('Server bilan bog‘lanishda xatolik yuz berdi'));
     }
 
-    // Har 3 soniyada avtomatik xabarlarni yangilash
+    // Har 2 soniyada avtomatik chat yangilanishi
     setInterval(() => {
-      if(currentUser) loadMessages();
-    }, 3000);
+      if (currentUser) loadMessages();
+    }, 2000);
   </script>
 </body>
 </html>

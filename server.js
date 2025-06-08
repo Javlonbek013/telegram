@@ -1,27 +1,67 @@
 const express = require('express');
-const path = require('path');
-const app = express();
+const cors = require('cors');
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// User va message saqlash uchun oddiy xotira (test uchun)
+const users = [];
+const messages = [];
+
+app.use(cors());
 app.use(express.json());
 
-// public papkasi frontend fayllaringiz joylashgan joy bo‘lsin
-app.use(express.static(path.join(__dirname, 'public')));
-
-// API endpointlar misol uchun
+// Register
 app.post('/register', (req, res) => {
-  // ro'yxatdan o'tish kodi
+  const { phone, password } = req.body;
+  if (!phone || !password) return res.json({ error: 'Iltimos, telefon va parol kiriting' });
+
+  const exists = users.find(u => u.phone === phone);
+  if (exists) return res.json({ error: 'Bu telefon raqam allaqachon ro‘yxatdan o‘tgan' });
+
+  users.push({ phone, password });
+  res.json({ message: 'Ro‘yxatdan o‘tish muvaffaqiyatli!' });
 });
 
+// Login
 app.post('/login', (req, res) => {
-  // login kodi
+  const { phone, password } = req.body;
+  if (!phone || !password) return res.json({ error: 'Iltimos, telefon va parol kiriting' });
+
+  const user = users.find(u => u.phone === phone && u.password === password);
+  if (!user) return res.json({ error: 'Noto‘g‘ri telefon yoki parol' });
+
+  res.json({ message: 'Kirish muvaffaqiyatli!' });
 });
 
-// boshqa endpointlar...
+// Xabarlarni olish
+app.get('/messages', (req, res) => {
+  const { user1, user2 } = req.query;
+  if (!user1 || !user2) return res.json([]);
 
-// Boshqa barcha so'rovlarni frontend index.html ga yo'naltirish
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // user1 va user2 o‘rtasidagi xabarlarni ajratib olish
+  const chat = messages.filter(m =>
+    (m.from === user1 && m.to === user2) || (m.from === user2 && m.to === user1)
+  );
+  res.json(chat);
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server ${PORT}-portda ishlayapti`));
+// Xabar yuborish
+app.post('/send-message', (req, res) => {
+  const { from, to, text } = req.body;
+  if (!from || !to || !text) return res.json({ error: 'Barcha maydonlarni to‘ldiring' });
+
+  // Foydalanuvchilar ro‘yxatda borligini tekshirish (optional)
+  if (!users.find(u => u.phone === from) || !users.find(u => u.phone === to)) {
+    return res.json({ error: 'Foydalanuvchi topilmadi' });
+  }
+
+  const time = new Date();
+  messages.push({ from, to, text, time });
+
+  res.json({ message: 'Xabar jo‘natildi' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server ${PORT} portda ishlayapti`);
+});
