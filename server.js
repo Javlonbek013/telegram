@@ -2,68 +2,62 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors());
+app.use(express.json());
 
 const users = [];
 const messages = [];
 
-app.use(cors());
-app.use(express.json());
-
 app.post('/register', (req, res) => {
   const { phone, password } = req.body;
-  if (!phone || !password) return res.json({ error: 'Iltimos, telefon va parol kiriting' });
+  if (!phone || !password) return res.status(400).json({ error: 'Telefon va parol kerak' });
 
-  const exists = users.find(u => u.phone === phone);
-  if (exists) return res.json({ error: 'Bu telefon raqam allaqachon ro‘yxatdan o‘tgan' });
+  const user = users.find(u => u.phone === phone);
+  if (user) {
+    if (user.password === password) {
+      return res.json({ message: 'Tizimga kirdingiz (oldin ro‘yxatdan o‘tgan)' });
+    } else {
+      return res.status(400).json({ error: 'Bu raqam oldin ro‘yxatdan o‘tgan. Parol noto‘g‘ri.' });
+    }
+  }
 
   users.push({ phone, password });
-  res.json({ message: 'Ro‘yxatdan o‘tish muvaffaqiyatli!' });
+  res.json({ message: 'Ro‘yxatdan muvaffaqiyatli o‘tildi' });
 });
 
 app.post('/login', (req, res) => {
   const { phone, password } = req.body;
-  if (!phone || !password) return res.json({ error: 'Iltimos, telefon va parol kiriting' });
-
   const user = users.find(u => u.phone === phone && u.password === password);
-  if (!user) return res.json({ error: 'Noto‘g‘ri telefon yoki parol' });
+  if (!user) return res.status(400).json({ error: 'Telefon yoki parol noto‘g‘ri' });
+  res.json({ message: 'Kirish muvaffaqiyatli' });
+});
 
-  res.json({ message: 'Kirish muvaffaqiyatli!' });
+app.post('/send-message', (req, res) => {
+  const { from, to, text } = req.body;
+  if (!from || !to || !text) return res.status(400).json({ error: 'Ma’lumotlar yetarli emas' });
+
+  const sender = users.find(u => u.phone === from);
+  const receiver = users.find(u => u.phone === to);
+  if (!sender || !receiver) return res.status(400).json({ error: 'Foydalanuvchi topilmadi' });
+
+  messages.push({ from, to, text, time: new Date() });
+  res.json({ message: 'Xabar yuborildi' });
 });
 
 app.get('/messages', (req, res) => {
   const { user1, user2 } = req.query;
-  if (!user1 || !user2) return res.json([]);
-
-  const chat = messages.filter(m =>
-    (m.from === user1 && m.to === user2) || (m.from === user2 && m.to === user1)
+  const result = messages.filter(
+    msg => (msg.from === user1 && msg.to === user2) || (msg.from === user2 && msg.to === user1)
   );
-  res.json(chat);
-});
-app.post('/send-message', (req, res) => {
-  const { from, to, text } = req.body;
-  if (!from || !to || !text) return res.json({ error: 'Barcha maydonlarni to‘ldiring' });
-
-  if (!users.find(u => u.phone === from) || !users.find(u => u.phone === to)) {
-    return res.json({ error: 'Foydalanuvchi topilmadi' });
-  }
-
-  const time = new Date();
-  messages.push({ from, to, text, time });
-
-  res.json({ message: 'Xabar jo‘natildi' });
+  res.json(result);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server ${PORT} portda ishlayapti`);
-});
-const path = require('path');
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 app.get('/users', (req, res) => {
-  res.json(users);
+  const onlyPhones = users.map(u => u.phone);
+  res.json(onlyPhones);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server ${PORT}-portda ishlamoqda`);
 });
